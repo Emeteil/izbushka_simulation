@@ -17,7 +17,6 @@ public class TransportReceiver : MonoBehaviour
     public static event Action<string, string, JObject> OnCommand;
 
     public static event Action OnPing;
-    public static event Action<int> OnDistanceRequest;
     public static event Action<int> OnMillisRequest;
 
     public static event Action<int, int, int> OnMotorsSetSpeed;
@@ -32,12 +31,6 @@ public class TransportReceiver : MonoBehaviour
     public static event Action OnMotorsStop;
     public static event Action OnMotorsBrake;
     public static event Action<int, int, int, int> OnMotorsSetDifferential;
-
-    public static event Action<int, int> OnServoMoveImmediate;
-    public static event Action<int, int, int> OnServoMoveSmoothLow;
-    public static event Action<int, int, int> OnServoMoveSmoothHigh;
-    public static event Action<int, int> OnServoMoveRelative;
-    public static event Action<int, int> OnServoCalibrate;
 
     public static event Action<string> OnSubscribe;
     public static event Action<string> OnUnsubscribe;
@@ -158,14 +151,8 @@ public class TransportReceiver : MonoBehaviour
             case "ping":
                 result["result"] = true;
                 break;
-            case "distance":
-                result["result"] = SensorDataProvider.GetDistance();
-                break;
             case "millis":
                 result["result"] = SensorDataProvider.GetMillis();
-                break;
-            case "gyro":
-                result["result"] = SensorDataProvider.GetGyroJson();
                 break;
             default:
                 result["result"] = true;
@@ -181,10 +168,8 @@ public class TransportReceiver : MonoBehaviour
         switch (command)
         {
             case "ping": OnPing?.Invoke(); break;
-            case "distance": OnDistanceRequest?.Invoke(kwargs.Value<int?>("timeout") ?? 5); break;
             case "millis": OnMillisRequest?.Invoke(kwargs.Value<int?>("timeout") ?? 5); break;
             case "motors": HandleMotors(action, kwargs); break;
-            case "servo": HandleServo(action, kwargs); break;
         }
     }
 
@@ -319,31 +304,6 @@ public class TransportReceiver : MonoBehaviour
                 break;
             case "set_differential":
                 OnMotorsSetDifferential?.Invoke(kw.Value<int?>("speed_left") ?? 0, kw.Value<int?>("speed_right") ?? 0, kw.Value<int?>("direction_left") ?? 1, kw.Value<int?>("direction_right") ?? 1);
-                break;
-        }
-    }
-
-    private void HandleServo(string action, JObject kw)
-    {
-        int channel = kw.Value<int?>("channel") ?? 0;
-        int angle = kw.Value<int?>("angle") ?? 90;
-
-        switch (action)
-        {
-            case "move_immediate":
-                OnServoMoveImmediate?.Invoke(channel, angle);
-                break;
-            case "move_smooth_low":
-                OnServoMoveSmoothLow?.Invoke(channel, angle, kw.Value<int?>("step_delay_ms") ?? 50);
-                break;
-            case "move_smooth_high":
-                OnServoMoveSmoothHigh?.Invoke(channel, angle, kw.Value<int?>("step_delay_ms") ?? 50);
-                break;
-            case "move_relative":
-                OnServoMoveRelative?.Invoke(channel, kw.Value<int?>("delta_angle") ?? 0);
-                break;
-            case "calibrate":
-                OnServoCalibrate?.Invoke(channel, kw.Value<int?>("calibrate_angle") ?? 90);
                 break;
         }
     }
